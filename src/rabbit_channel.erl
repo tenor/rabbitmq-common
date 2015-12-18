@@ -495,11 +495,12 @@ handle_cast({deliver, ConsumerTag, AckRequired,
                                    content       = Content}}},
             State = #ch{writer_pid = WriterPid,
                         next_tag   = DeliveryTag}) ->
+    true = is_integer(Redelivered),
     ok = rabbit_writer:send_command_and_notify(
            WriterPid, QPid, self(),
            #'basic.deliver'{consumer_tag = ConsumerTag,
                             delivery_tag = DeliveryTag,
-                            redelivered  = Redelivered,
+                            redelivered  = Redelivered > 0,
                             exchange     = ExchangeName#resource.name,
                             routing_key  = RoutingKey},
            Content),
@@ -992,10 +993,11 @@ handle_method(#'basic.get'{queue = QueueNameBin, no_ack = NoAck},
                 #basic_message{exchange_name = ExchangeName,
                                routing_keys  = [RoutingKey | _CcRoutes],
                                content       = Content}}} ->
+            true = is_integer(Redelivered),
             ok = rabbit_writer:send_command(
                    WriterPid,
                    #'basic.get_ok'{delivery_tag  = DeliveryTag,
-                                   redelivered   = Redelivered,
+                                   redelivered   = Redelivered > 0,
                                    exchange      = ExchangeName#resource.name,
                                    routing_key   = RoutingKey,
                                    message_count = MessageCount},
@@ -1696,7 +1698,8 @@ record_sent(ConsumerTag, AckRequired,
                                                {_   ,  true} -> deliver;
                                                {_   , false} -> deliver_no_ack
                                            end, State),
-    case Redelivered of
+    true = is_integer(Redelivered),
+    case Redelivered > 0 of
         true  -> ?INCR_STATS([{queue_stats, QName, 1}], redeliver, State);
         false -> ok
     end,

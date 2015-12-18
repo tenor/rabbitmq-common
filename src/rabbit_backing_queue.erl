@@ -117,7 +117,8 @@
 %% out to a client. The queue will be empty for these calls
 %% (i.e. saves the round trip through the backing queue).
 -callback publish_delivered(rabbit_types:basic_message(),
-                            rabbit_types:message_properties(), pid(), flow(),
+                            rabbit_types:message_properties(), boolean(),
+                            pid(), flow(),
                             state())
                            -> {ack(), state()}.
 
@@ -273,7 +274,7 @@
 behaviour_info(callbacks) ->
     [{start, 1}, {stop, 0}, {init, 3}, {terminate, 2},
      {delete_and_terminate, 2}, {delete_crashed, 1}, {purge, 1},
-     {purge_acks, 1}, {publish, 6}, {publish_delivered, 5},
+     {purge_acks, 1}, {publish, 6}, {publish_delivered, 6},
      {batch_publish, 4}, {batch_publish_delivered, 4},
      {discard, 4}, {drain_confirmed, 1},
      {dropwhile, 2}, {fetchwhile, 4}, {fetch, 2},
